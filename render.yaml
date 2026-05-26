@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ai-recruiter-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: ohio
+    plan: free
+    branch: main
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-recruiter-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+    
+databases:
+  - name: ai-recruiter-db
+    databaseName: airecruiter
+    user: admin
+    plan: free
+    region: ohio

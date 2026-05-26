@@ -1,0 +1,117 @@
+import React, { useState } from 'react';
+import { UploadCloud, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+
+const Dashboard = () => {
+  const { currentUser, userProfile } = useAuth();
+  const displayName = userProfile?.full_name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'there';
+  const photoURL = userProfile?.photo_url || currentUser?.photoURL;
+
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const [isAnalyzed, setIsAnalyzed] = useState(false);
+
+  const handleDragOver = (e) => e.preventDefault();
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+      setIsAnalyzed(false); // Reset on new file
+    }
+  };
+
+  const uploadFile = () => {
+    if (!file) return;
+    setUploading(true);
+    // Simulation of API call
+    setTimeout(() => {
+      setUploading(false);
+      setIsAnalyzed(true);
+      alert('Resume Uploaded & Parsed Successfully!');
+    }, 2000);
+  };
+
+  return (
+    <div className="p-8 space-y-8 min-h-screen">
+      {/* Personalized Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {photoURL ? (
+            <img src={photoURL} alt={displayName} className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-500/40" />
+          ) : (
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-white">Hello, {displayName} 👋</h1>
+            <p className="text-gray-400 mt-0.5 text-sm">Upload your resume to start AI analysis.</p>
+          </div>
+        </div>
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-2xl p-8 max-w-2xl mx-auto"
+      >
+        <div 
+          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all ${file ? 'border-emerald-500 bg-emerald-500/5' : 'border-gray-600 hover:border-gray-400'}`}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {file ? (
+            <div className="flex flex-col items-center space-y-4">
+              <CheckCircle2 className="w-16 h-16 text-emerald-400" />
+              <div className="text-xl font-semibold text-white">{file.name}</div>
+              <p className="text-sm text-emerald-400/80">Ready for analysis</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center space-y-4">
+              <UploadCloud className="w-16 h-16 text-gray-400" />
+              <div className="text-xl font-medium text-white">Drag & drop your resume</div>
+              <p className="text-sm text-gray-400">Support PDF and DOCX files up to 10MB</p>
+            </div>
+          )}
+        </div>
+        
+        <div className="mt-6 flex justify-end">
+          <button 
+            onClick={uploadFile}
+            disabled={!file || uploading}
+            className={`px-6 py-3 rounded-xl font-medium flex items-center space-x-2 transition-all ${
+              !file ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+              : uploading ? 'bg-emerald-500/50 text-white cursor-wait'
+              : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]'
+            }`}
+          >
+            {uploading ? 'Analyzing with AI...' : 'Analyze Resume'}
+          </button>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
+        {[
+          { title: 'ATS Score', value: isAnalyzed ? '85/100' : '📊', color: 'emerald' },
+          { title: 'Skills Extracted', value: isAnalyzed ? '24' : '🛠️', color: 'indigo' },
+          { title: 'Improvements Found', value: isAnalyzed ? '7' : '✨', color: 'purple' },
+        ].map((stat, i) => (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * (i + 1) }}
+            key={i} 
+            className="glass rounded-xl p-6"
+          >
+            <h3 className="text-gray-400 font-medium">{stat.title}</h3>
+            <p className={`text-4xl font-bold mt-2 text-${stat.color}-400`}>{stat.value}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
