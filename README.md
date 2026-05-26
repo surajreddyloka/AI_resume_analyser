@@ -167,3 +167,4 @@ This project is open-source and available under the [MIT License](LICENSE).
 ---
 
 <p align="center">Built with ❤️ for the future of AI-powered recruitment</p>
+# AI_resume_analyser
