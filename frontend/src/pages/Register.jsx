@@ -34,8 +34,9 @@ const Register = () => {
       toast.success('Signed up with Google! 🎉');
       navigate('/');
     } catch (err) {
+      console.error('Google sign-up error:', err);
       if (err.code !== 'auth/popup-closed-by-user') {
-        toast.error('Google sign-up failed. Please try again.');
+        toast.error(`Google sign-up failed: ${err.message || err}`);
       }
     }
     setGoogleLoading(false);
