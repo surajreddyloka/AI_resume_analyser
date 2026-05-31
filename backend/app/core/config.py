@@ -13,7 +13,10 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
     # DB
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
+    _db_url = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
+    if _db_url and _db_url.startswith("postgres://"):
+        _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL: str = _db_url
 
     # External APIs
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
