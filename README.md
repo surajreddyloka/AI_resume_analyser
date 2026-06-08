@@ -84,8 +84,7 @@ npm run dev
 ```
 
 ### 4. Open the App
-- **Frontend**: http://localhost:5173
-- **Backend API Docs**: http://localhost:8000/docs
+https://ai-resume-analyser-suraj.netlify.app/
 
 ---
 
