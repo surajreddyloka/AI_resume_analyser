@@ -46,13 +46,6 @@ const Sidebar = () => {
         ))}
       </div>
 
-      {/* Powered by badge */}
-      <div className="px-4 pb-2">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <p className="text-xs text-indigo-300 font-medium">Powered by Gemini AI</p>
-        </div>
-      </div>
 
       {/* User Menu — avatar + name + dropdown at the bottom */}
       <div className="p-3 border-t border-white/5">
