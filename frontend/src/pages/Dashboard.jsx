@@ -33,6 +33,13 @@ const Dashboard = () => {
     }, 2000);
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setIsAnalyzed(false);
+    }
+  };
+
   return (
     <div className="p-8 space-y-8 min-h-screen">
       {/* Personalized Header */}
@@ -58,20 +65,28 @@ const Dashboard = () => {
         className="glass rounded-2xl p-8 max-w-2xl mx-auto"
       >
         <div 
-          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all ${file ? 'border-emerald-500 bg-emerald-500/5' : 'border-gray-600 hover:border-gray-400'}`}
+          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${file ? 'border-emerald-500 bg-emerald-500/5' : 'border-gray-600 hover:border-gray-400 hover:bg-white/5'}`}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          onClick={() => document.getElementById('resume-upload').click()}
         >
+          <input 
+            type="file" 
+            id="resume-upload" 
+            className="hidden" 
+            accept=".pdf,.docx,.doc" 
+            onChange={handleFileChange} 
+          />
           {file ? (
             <div className="flex flex-col items-center space-y-4">
               <CheckCircle2 className="w-16 h-16 text-emerald-400" />
               <div className="text-xl font-semibold text-white">{file.name}</div>
-              <p className="text-sm text-emerald-400/80">Ready for analysis</p>
+              <p className="text-sm text-emerald-400/80">Ready for analysis. Click to change file.</p>
             </div>
           ) : (
             <div className="flex flex-col items-center space-y-4">
               <UploadCloud className="w-16 h-16 text-gray-400" />
-              <div className="text-xl font-medium text-white">Drag & drop your resume</div>
+              <div className="text-xl font-medium text-white">Drag & drop or <span className="text-emerald-400 underline decoration-emerald-400/30 underline-offset-4">browse files</span></div>
               <p className="text-sm text-gray-400">Support PDF and DOCX files up to 10MB</p>
             </div>
           )}
