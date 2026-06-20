@@ -22,7 +22,16 @@ const Login = () => {
       toast.success('Welcome back! 👋');
       navigate('/');
     } catch (err) {
-      toast.error(err.message.replace('Firebase: ', '').replace(/ \(auth.*\)\.?/, ''));
+      let errorMessage = 'An error occurred during login.';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many attempts. Please try again later.';
+      } else if (err.message) {
+        errorMessage = err.message.replace('Firebase: ', '').replace(/ \(auth.*?\)\.?/, '').trim();
+        if (errorMessage === 'Error') errorMessage = 'Invalid email or password.';
+      }
+      toast.error(errorMessage);
     }
     setLoading(false);
   };

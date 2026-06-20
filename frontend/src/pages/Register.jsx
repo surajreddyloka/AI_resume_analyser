@@ -22,7 +22,18 @@ const Register = () => {
       toast.success('Account created! Welcome 🚀');
       navigate('/');
     } catch (err) {
-      toast.error(err.message.replace('Firebase: ', '').replace(/ \(auth.*\)\.?/, ''));
+      let errorMessage = 'An error occurred during registration.';
+      if (err.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already in use.';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = 'Password should be at least 6 characters.';
+      } else if (err.message) {
+        errorMessage = err.message.replace('Firebase: ', '').replace(/ \(auth.*?\)\.?/, '').trim();
+        if (errorMessage === 'Error') errorMessage = 'Could not create account. Please try again.';
+      }
+      toast.error(errorMessage);
     }
     setLoading(false);
   };
