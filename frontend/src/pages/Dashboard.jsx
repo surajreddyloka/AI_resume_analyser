@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UploadCloud, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import API_BASE from '../config';
 
 const Dashboard = () => {
   const { currentUser, userProfile } = useAuth();
@@ -30,7 +31,7 @@ const Dashboard = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/v1/resumes/upload', {
+      const response = await fetch(`${API_BASE}/api/v1/resumes/upload`, {
         method: 'POST',
         body: formData,
       });

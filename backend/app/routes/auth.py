@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from firebase_admin import auth as firebase_auth
+import httpx
 from bson import ObjectId
 
 from app.core.database import get_db
@@ -56,14 +56,15 @@ async def google_login(payload: GoogleLoginRequest, db = Depends(get_db)):
     Creates or updates the user record with Google profile data.
     """
     try:
-        decoded = firebase_auth.verify_id_token(payload.id_token)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid Firebase token: {e}",
+        response = httpx.get(
+            f"https://oauth2.googleapis.com/tokeninfo?id_token={payload.id_token}",
+            timeout=10
         )
+        if response.status_code != 200:
+            raise HTTPException(status_code=401, detail=f"Invalid Firebase token: {response.text}")
+        decoded = response.json()
 
-    uid = decoded.get("uid")
+    uid = decoded.get("sub") or decoded.get("uid")  # Google uses 'sub', Firebase uses 'uid'
     email = decoded.get("email")
     name = decoded.get("name")
     photo = decoded.get("picture")

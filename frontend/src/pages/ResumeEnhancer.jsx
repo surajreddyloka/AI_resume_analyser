@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Save } from 'lucide-react';
+import API_BASE from '../config';
 
 const ResumeEnhancer = () => {
   const [bullet, setBullet] = useState('');
@@ -11,7 +12,7 @@ const ResumeEnhancer = () => {
     setEnhancing(true);
     setResults(null);
     try {
-      const response = await fetch('/api/v1/ai/enhance-bullet', {
+      const response = await fetch(`${API_BASE}/api/v1/ai/enhance-bullet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bullet })

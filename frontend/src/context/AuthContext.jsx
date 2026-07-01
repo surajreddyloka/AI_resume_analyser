@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, googleProvider, signInWithPopup } from '../core/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import API_BASE from '../config';
 
 const AuthContext = createContext();
 
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     }
     try {
       const idToken = await firebaseUser.getIdToken();
-      const res = await fetch('/api/v1/auth/me', {
+      const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
         headers: { Authorization: `Bearer ${idToken}` },
       });
       if (res.ok) {
@@ -45,14 +46,14 @@ export const AuthProvider = ({ children }) => {
     const idToken = await result.user.getIdToken();
 
     // Sync to backend — creates/updates user with Google profile data
-    await fetch('/api/v1/auth/google', {
+    await fetch(`${API_BASE}/api/v1/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id_token: idToken }),
     });
 
     // Fetch the updated profile
-    const profileRes = await fetch('/api/v1/auth/me', {
+    const profileRes = await fetch(`${API_BASE}/api/v1/auth/me`, {
       headers: { Authorization: `Bearer ${idToken}` },
     });
     if (profileRes.ok) {
