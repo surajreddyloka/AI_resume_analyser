@@ -24,7 +24,7 @@ const JobMatcher = () => {
     setAnalyzing(true);
     try {
       // 1. Create Job with JD
-      const jobResponse = await fetch('http://localhost:8000/api/v1/matching/jobs', {
+      const jobResponse = await fetch('/api/v1/matching/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -38,7 +38,7 @@ const JobMatcher = () => {
       const jobId = jobData.id;
 
       // 2. Match Resume to Job
-      const matchResponse = await fetch(`http://localhost:8000/api/v1/matching/match/${resumeId}/${jobId}`, {
+      const matchResponse = await fetch(`/api/v1/matching/match/${resumeId}/${jobId}`, {
         method: 'POST'
       });
       if (!matchResponse.ok) throw new Error('Failed to match resume to job');

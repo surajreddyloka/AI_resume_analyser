@@ -30,7 +30,7 @@ const Dashboard = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/resumes/upload', {
+      const response = await fetch('/api/v1/resumes/upload', {
         method: 'POST',
         body: formData,
       });
