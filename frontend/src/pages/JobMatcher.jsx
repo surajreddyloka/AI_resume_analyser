@@ -7,16 +7,54 @@ const JobMatcher = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
 
-  const analyze = () => {
+  const analyze = async () => {
+    const resumeStr = localStorage.getItem('currentResume');
+    if (!resumeStr) {
+      alert("No resume found. Please upload a resume on the Dashboard first.");
+      return;
+    }
+    const currentResume = JSON.parse(resumeStr);
+    const resumeId = currentResume.id;
+
+    if (!resumeId) {
+      alert("Invalid resume data. Please upload your resume again.");
+      return;
+    }
+
     setAnalyzing(true);
-    setTimeout(() => {
-      setAnalyzing(false);
-      setResult({
-        score: 78,
-        matched: ['Python', 'React', 'Machine Learning', 'SQL'],
-        missing: ['Docker', 'AWS', 'GraphQL']
+    try {
+      // 1. Create Job with JD
+      const jobResponse = await fetch('http://localhost:8000/api/v1/matching/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: "Custom Title",
+          company: "Custom Company",
+          description: jd
+        })
       });
-    }, 2000);
+      if (!jobResponse.ok) throw new Error('Failed to create job context');
+      const jobData = await jobResponse.json();
+      const jobId = jobData.id;
+
+      // 2. Match Resume to Job
+      const matchResponse = await fetch(`http://localhost:8000/api/v1/matching/match/${resumeId}/${jobId}`, {
+        method: 'POST'
+      });
+      if (!matchResponse.ok) throw new Error('Failed to match resume to job');
+      const matchData = await matchResponse.json();
+      
+      setResult({
+        score: Math.round(matchData.match_score) || 0,
+        matched: matchData.match_details?.matched_skills || [],
+        missing: matchData.match_details?.missing_skills || []
+      });
+    } catch (error) {
+      console.error(error);
+      alert("Failed to analyze job match. Please ensure backend is running.");
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   return (

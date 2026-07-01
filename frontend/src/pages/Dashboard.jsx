@@ -22,15 +22,34 @@ const Dashboard = () => {
     }
   };
 
-  const uploadFile = () => {
+  const uploadFile = async () => {
     if (!file) return;
     setUploading(true);
-    // Simulation of API call
-    setTimeout(() => {
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/resumes/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload resume');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('currentResume', JSON.stringify(data));
+      
       setUploading(false);
       setIsAnalyzed(true);
       alert('Resume Uploaded & Parsed Successfully!');
-    }, 2000);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploading(false);
+      alert('Failed to process resume. Please ensure the backend is running.');
+    }
   };
 
   const handleFileChange = (e) => {
@@ -39,6 +58,13 @@ const Dashboard = () => {
       setIsAnalyzed(false);
     }
   };
+
+  // Get current resume from local storage for stats
+  const currentResumeStr = localStorage.getItem('currentResume');
+  const currentResume = currentResumeStr ? JSON.parse(currentResumeStr) : null;
+  const atsScore = currentResume?.ats_score || '📊';
+  const skillsCount = currentResume?.parsed_data?.skills?.length || '🛠️';
+  const improvementsCount = currentResume?.ats_feedback?.weaknesses?.length || '✨';
 
   return (
     <div className="p-8 space-y-8 min-h-screen">
@@ -109,9 +135,9 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
         {[
-          { title: 'ATS Score', value: isAnalyzed ? '85/100' : '📊', color: 'emerald' },
-          { title: 'Skills Extracted', value: isAnalyzed ? '24' : '🛠️', color: 'indigo' },
-          { title: 'Improvements Found', value: isAnalyzed ? '7' : '✨', color: 'purple' },
+          { title: 'ATS Score', value: isAnalyzed || currentResume ? `${atsScore}/100` : '📊', color: 'emerald' },
+          { title: 'Skills Extracted', value: isAnalyzed || currentResume ? skillsCount : '🛠️', color: 'indigo' },
+          { title: 'Improvements Found', value: isAnalyzed || currentResume ? improvementsCount : '✨', color: 'purple' },
         ].map((stat, i) => (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}

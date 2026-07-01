@@ -47,23 +47,20 @@ const ATSAnalyzer = () => {
     setAnalyzing(true);
     setTimeout(() => {
       setAnalyzing(false);
-      setResult({
-        score: 72,
-        strengths: [
-          'Good skills section present with relevant technologies.',
-          'Education section is complete and well-formatted.',
-          'Good use of quantifiable metrics found.',
-        ],
-        weaknesses: [
-          'Some bullet points do not start with strong action verbs.',
-          'Projects section could be more detailed.',
-        ],
-        formatting: [
-          'Resume length is within the ideal 1-page range.',
-          'All critical resume sections are present.',
-        ],
-      });
-    }, 2500);
+      
+      const resumeStr = localStorage.getItem('currentResume');
+      if (resumeStr) {
+        const currentResume = JSON.parse(resumeStr);
+        setResult({
+          score: currentResume.ats_score || 0,
+          strengths: currentResume.ats_feedback?.strengths || [],
+          weaknesses: currentResume.ats_feedback?.weaknesses || [],
+          formatting: currentResume.ats_feedback?.formatting || [],
+        });
+      } else {
+        alert("No resume found. Please upload a resume on the Dashboard first.");
+      }
+    }, 1000); // 1s simulation delay for UI feeling
   };
 
   const scoreBreakdown = [
