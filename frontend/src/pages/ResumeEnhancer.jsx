@@ -7,16 +7,24 @@ const ResumeEnhancer = () => {
   const [enhancing, setEnhancing] = useState(false);
   const [results, setResults] = useState(null);
 
-  const enhance = () => {
+  const enhance = async () => {
     setEnhancing(true);
-    setTimeout(() => {
-      setEnhancing(false);
-      setResults({
-        standard: "Developed a web application using React and Node.js that improved data processing speed by 30%.",
-        metric_driven: "Engineered a scalable full-stack React/Node.js application, accelerating data processing speeds by 30% and reducing server latency for 5,000+ daily active users.",
-        leadership: "Led the development of a high-performance web application (React/Node.js), directly resulting in a 30% increase in data processing speed and establishing new engineering best practices."
+    setResults(null);
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/ai/enhance-bullet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bullet })
       });
-    }, 2500);
+      if (!response.ok) throw new Error('Failed to enhance bullet');
+      const data = await response.json();
+      setResults(data);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to enhance bullet point. Please ensure backend is running.');
+    } finally {
+      setEnhancing(false);
+    }
   };
 
   return (

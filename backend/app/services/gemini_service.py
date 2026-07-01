@@ -1,12 +1,19 @@
 import google.generativeai as genai
 import json
+import re
 from app.core.config import settings
 
 # Initialize Gemini API
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
-# Use Gemini 1.5 Flash for high speed and accuracy in text parsing and generation
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Use Gemini Flash for high speed and accuracy in text parsing and generation
+model = genai.GenerativeModel('gemini-flash-latest')
+
+def _clean_json_string(text: str) -> str:
+    text = text.strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*```$", "", text)
+    return text.strip()
 
 class GeminiService:
     @staticmethod
@@ -15,7 +22,7 @@ class GeminiService:
         Uses Gemini to extract structured JSON data from raw resume text.
         """
         prompt = f"""
-        You are an expert AI recruiter. Extract the following information from the resume text below and return ONLY a valid JSON object. Do not include markdown formatting like ```json.
+        You are an expert AI recruiter. Extract the following information from the resume text below and return ONLY a valid JSON object. Do not include markdown formatting.
         
         Required JSON structure:
         {{
@@ -34,13 +41,10 @@ class GeminiService:
         """
         try:
             response = model.generate_content(prompt)
-            text = response.text.strip()
-            if text.startswith("```json"):
-                text = text[7:-3]
-            elif text.startswith("```"):
-                text = text[3:-3]
-            return json.loads(text.strip())
+            text = _clean_json_string(response.text)
+            return json.loads(text)
         except Exception as e:
+            print(f"JSON Parsing Error: {e}")
             return {"error": str(e), "status": "Failed to parse"}
 
     @staticmethod
@@ -61,9 +65,8 @@ class GeminiService:
         """
         try:
             response = model.generate_content(prompt)
-            text = response.text.strip()
-            if text.startswith("```json"): text = text[7:-3]
-            return json.loads(text.strip())
+            text = _clean_json_string(response.text)
+            return json.loads(text)
         except Exception as e:
             return {"error": str(e)}
 
@@ -86,9 +89,8 @@ class GeminiService:
         """
         try:
             response = model.generate_content(prompt)
-            text = response.text.strip()
-            if text.startswith("```json"): text = text[7:-3]
-            return json.loads(text.strip())
+            text = _clean_json_string(response.text)
+            return json.loads(text)
         except Exception as e:
             return {"error": str(e)}
 
@@ -113,9 +115,8 @@ class GeminiService:
         """
         try:
             response = model.generate_content(prompt)
-            text = response.text.strip()
-            if text.startswith("```json"): text = text[7:-3]
-            return json.loads(text.strip())
+            text = _clean_json_string(response.text)
+            return json.loads(text)
         except Exception as e:
             return {"error": str(e)}
 
@@ -126,7 +127,7 @@ class GeminiService:
         """
         try:
             result = genai.embed_content(
-                model="models/text-embedding-004",
+                model="models/gemini-embedding-001",
                 content=text,
                 task_type="retrieval_document"
             )

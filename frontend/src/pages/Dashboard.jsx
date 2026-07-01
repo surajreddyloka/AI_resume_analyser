@@ -63,8 +63,8 @@ const Dashboard = () => {
   const currentResumeStr = localStorage.getItem('currentResume');
   const currentResume = currentResumeStr ? JSON.parse(currentResumeStr) : null;
   const atsScore = currentResume?.ats_score || '📊';
-  const skillsCount = currentResume?.parsed_data?.skills?.length || '🛠️';
-  const improvementsCount = currentResume?.ats_feedback?.weaknesses?.length || '✨';
+  const skillsCount = currentResume?.parsed_data?.skills?.length ?? '🛠️';
+  const improvementsCount = currentResume?.ats_feedback?.weaknesses?.length ?? '✨';
 
   return (
     <div className="p-8 space-y-8 min-h-screen">
