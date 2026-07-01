@@ -13,10 +13,12 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
     # DB
-    _db_url = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
-    if _db_url and _db_url.startswith("postgres://"):
-        _db_url = _db_url.replace("postgres://", "postgresql://", 1)
-    DATABASE_URL: str = _db_url
+    MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017/airecruiter")
+    
+    # Cloudinary
+    CLOUDINARY_CLOUD_NAME: str = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+    CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY", "")
+    CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET", "")
 
     # External APIs
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")

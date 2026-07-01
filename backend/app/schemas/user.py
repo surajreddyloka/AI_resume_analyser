@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
@@ -14,7 +14,7 @@ class GoogleLoginRequest(BaseModel):
     id_token: str
 
 class UserResponse(UserBase):
-    id: int
+    id: str = Field(alias="_id")
     firebase_uid: Optional[str] = None
     photo_url: Optional[str] = None
     provider: Optional[str] = "email"
@@ -22,6 +22,7 @@ class UserResponse(UserBase):
     created_at: datetime
 
     class Config:
+        populate_by_name = True
         from_attributes = True
 
 class Token(BaseModel):

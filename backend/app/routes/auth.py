@@ -1,12 +1,11 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
 from firebase_admin import auth as firebase_auth
+from bson import ObjectId
 
 from app.core.database import get_db
 from app.core.security import decode_access_token
-from app.models.user import User
 from app.schemas.user import UserResponse, GoogleLoginRequest
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -14,9 +13,9 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 security = HTTPBearer()
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
+    db = Depends(get_db),
 ):
     """Validates the Firebase ID token and returns the user from the database."""
     token = credentials.credentials
@@ -31,24 +30,27 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user = db.query(User).filter(User.email == token_data.email).first()
+    user = await db["users"].find_one({"email": token_data.email})
 
     if user is None:
-        user = User(
-            email=token_data.email,
-            firebase_uid=token_data.uid,
-            hashed_password=None,
-            role="candidate",
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        user_doc = {
+            "email": token_data.email,
+            "firebase_uid": getattr(token_data, "uid", None),
+            "hashed_password": None,
+            "role": "candidate",
+            "created_at": datetime.now(timezone.utc)
+        }
+        result = await db["users"].insert_one(user_doc)
+        user_doc["_id"] = str(result.inserted_id)
+        user = user_doc
+    else:
+        user["_id"] = str(user["_id"])
 
     return user
 
 
 @router.post("/google", response_model=UserResponse)
-def google_login(payload: GoogleLoginRequest, db: Session = Depends(get_db)):
+async def google_login(payload: GoogleLoginRequest, db = Depends(get_db)):
     """
     Verifies a Firebase ID token from Google Sign-In.
     Creates or updates the user record with Google profile data.
@@ -71,38 +73,44 @@ def google_login(payload: GoogleLoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Token missing email claim.")
 
     # Try to find by firebase_uid first, then fall back to email
-    user = db.query(User).filter(User.firebase_uid == uid).first()
+    user = await db["users"].find_one({"firebase_uid": uid})
     if user is None:
-        user = db.query(User).filter(User.email == email).first()
+        user = await db["users"].find_one({"email": email})
 
     now = datetime.now(timezone.utc)
 
     if user is None:
         # New user — create record
-        user = User(
-            email=email,
-            full_name=name,
-            firebase_uid=uid,
-            photo_url=photo,
-            provider=provider,
-            role="candidate",
-            last_login=now,
-        )
-        db.add(user)
+        user_doc = {
+            "email": email,
+            "full_name": name,
+            "firebase_uid": uid,
+            "photo_url": photo,
+            "provider": provider,
+            "role": "candidate",
+            "last_login": now,
+            "created_at": now
+        }
+        result = await db["users"].insert_one(user_doc)
+        user_doc["_id"] = str(result.inserted_id)
+        user = user_doc
     else:
         # Existing user — update profile data
-        user.full_name = name or user.full_name
-        user.photo_url = photo or user.photo_url
-        user.firebase_uid = uid
-        user.provider = provider
-        user.last_login = now
+        update_data = {
+            "full_name": name or user.get("full_name"),
+            "photo_url": photo or user.get("photo_url"),
+            "firebase_uid": uid,
+            "provider": provider,
+            "last_login": now
+        }
+        await db["users"].update_one({"_id": user["_id"]}, {"$set": update_data})
+        user.update(update_data)
+        user["_id"] = str(user["_id"])
 
-    db.commit()
-    db.refresh(user)
     return user
 
 
 @router.get("/me", response_model=UserResponse)
-def read_users_me(current_user: User = Depends(get_current_user)):
+async def read_users_me(current_user = Depends(get_current_user)):
     """Get the current authenticated user's profile."""
     return current_user

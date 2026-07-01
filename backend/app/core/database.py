@@ -1,18 +1,13 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import motor.motor_asyncio
 from app.core.config import settings
 
-engine = create_engine(
-    settings.DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGO_URI)
+# Parse database name from URI, default to 'airecruiter'
+db_name = settings.MONGO_URI.split("/")[-1].split("?")[0]
+if not db_name:
+    db_name = "airecruiter"
 
-Base = declarative_base()
+db = client[db_name]
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    return db

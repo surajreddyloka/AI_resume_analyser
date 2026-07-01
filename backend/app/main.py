@@ -5,16 +5,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from app.core.config import settings
-from app.core.database import engine, Base
 
 # Initialize Firebase Admin SDK
 try:
     firebase_admin.get_app()
 except ValueError:
     firebase_admin.initialize_app(options={'projectId': 'ai-resume-analyser-3d069'})
-
-# Create database tables
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
