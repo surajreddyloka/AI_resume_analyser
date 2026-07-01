@@ -48,6 +48,32 @@ class GeminiService:
             return {"error": str(e), "status": "Failed to parse"}
 
     @staticmethod
+    def extract_jd_skills(raw_text: str) -> list:
+        """
+        Uses Gemini to extract required skills from a job description.
+        """
+        prompt = f"""
+        You are an expert AI recruiter. Extract ONLY the required and preferred skills, technologies, and tools mentioned in the following Job Description.
+        Return ONLY a valid JSON object with a single key "skills" containing a list of strings. Do not include markdown formatting.
+        
+        Required JSON structure:
+        {{
+            "skills": ["skill 1", "skill 2", "..."]
+        }}
+
+        Job Description Text:
+        {raw_text}
+        """
+        try:
+            response = model.generate_content(prompt)
+            text = _clean_json_string(response.text)
+            parsed = json.loads(text)
+            return parsed.get("skills", [])
+        except Exception as e:
+            print(f"JD Parsing Error: {e}")
+            return []
+
+    @staticmethod
     def enhance_bullet_point(bullet: str) -> dict:
         """
         Enhances a resume bullet point using the STAR method and action verbs.
@@ -107,7 +133,7 @@ class GeminiService:
         
         Provide your evaluation as a JSON object:
         {{
-            "score": 8, // out of 10
+            "score": 8,
             "feedback": "Overall feedback...",
             "strengths": ["...", "..."],
             "improvements": ["...", "..."]
@@ -119,6 +145,28 @@ class GeminiService:
             return json.loads(text)
         except Exception as e:
             return {"error": str(e)}
+
+    @staticmethod
+    def answer_with_rag(query: str, context: str) -> str:
+        """
+        Answers a user query using the provided context (RAG).
+        """
+        prompt = f"""
+        You are an AI Recruitment Assistant. Your job is to answer the recruiter's question based strictly on the provided candidate data below.
+        If the answer is not in the candidate data, say you don't know based on the current database.
+        Use Markdown formatting (bullet points, bold text) to make your answer easy to read.
+        When mentioning a candidate, refer to their name and ID.
+
+        Recruiter's Question: {query}
+
+        Candidate Database Context:
+        {context}
+        """
+        try:
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            return f"Error generating answer: {str(e)}"
 
     @staticmethod
     def get_embedding(text: str) -> list:

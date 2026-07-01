@@ -49,6 +49,17 @@ async def get_current_user(
     return user
 
 
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+    db = Depends(get_db),
+):
+    if not credentials:
+        return None
+    try:
+        return await get_current_user(credentials, db)
+    except Exception:
+        return None
+
 @router.post("/google", response_model=UserResponse)
 async def google_login(payload: GoogleLoginRequest, db = Depends(get_db)):
     """
@@ -63,6 +74,8 @@ async def google_login(payload: GoogleLoginRequest, db = Depends(get_db)):
         if response.status_code != 200:
             raise HTTPException(status_code=401, detail=f"Invalid Firebase token: {response.text}")
         decoded = response.json()
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=503, detail=f"Network error verifying token: {e}")
 
     uid = decoded.get("sub") or decoded.get("uid")  # Google uses 'sub', Firebase uses 'uid'
     email = decoded.get("email")

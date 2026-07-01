@@ -11,8 +11,7 @@ router = APIRouter()
 @router.post("/jobs", response_model=JobResponse)
 async def create_job(job: JobCreate, db = Depends(get_db)):
     # Extract skills automatically using Gemini
-    parsed = GeminiService.parse_resume_to_json(job.description)
-    required_skills = parsed.get("skills", [])
+    required_skills = GeminiService.extract_jd_skills(job.description)
     
     # Generate Embedding
     embedding = GeminiService.get_embedding(job.description)

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Bot, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import API_BASE from '../config';
 
 const RAGChatbot = () => {
   const [messages, setMessages] = useState([
@@ -18,19 +19,33 @@ const RAGChatbot = () => {
     'What skills is Candidate #1 missing for DevOps?',
   ];
 
-  const sendMessage = (text) => {
+  const sendMessage = async (text) => {
     const userMsg = text || input;
     if (!userMsg.trim()) return;
     setMessages((prev) => [...prev, { role: 'user', content: userMsg }]);
     setInput('');
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/ai/chatbot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: userMsg })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: data.answer,
+        }]);
+      } else {
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Error communicating with AI backend.' }]);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Network error communicating with AI backend.' }]);
+    } finally {
       setLoading(false);
-      setMessages((prev) => [...prev, {
-        role: 'assistant',
-        content: 'Based on resume database retrieval, **Candidate #1** is the strongest match with an ATS score of **85/100** and semantic similarity of **92%**. They have experience in Python, TensorFlow, and NLP pipelines.\n\n> *Source: Resume #1 — Section: Projects & Experience*',
-      }]);
-    }, 2000);
+    }
   };
 
   return (

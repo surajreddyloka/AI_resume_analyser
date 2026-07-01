@@ -31,8 +31,15 @@ const Dashboard = () => {
     formData.append('file', file);
 
     try {
+      const idToken = currentUser ? await currentUser.getIdToken() : null;
+      const headers = {};
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+      
       const response = await fetch(`${API_BASE}/api/v1/resumes/upload`, {
         method: 'POST',
+        headers,
         body: formData,
       });
 

@@ -37,6 +37,8 @@ class ResumeParser:
             raw_text = ResumeParser.extract_text_from_pdf(file_bytes)
         elif filename.endswith(".docx"):
             raw_text = ResumeParser.extract_text_from_docx(file_bytes)
+        elif filename.endswith(".doc"):
+            raise ValueError(".doc files are not supported. Please upload a .pdf or .docx file.")
         
         parsed_data = GeminiService.parse_resume_to_json(raw_text)
         return raw_text, parsed_data

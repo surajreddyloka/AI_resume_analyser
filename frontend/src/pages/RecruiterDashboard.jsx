@@ -1,38 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Trophy, TrendingUp, Filter, Star } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts';
-
-const candidates = [
-  { id: 1, name: 'Suraj Reddy Loka', role: 'ML Engineer', score: 92, skills: ['Python', 'TensorFlow', 'NLP', 'React'], ats: 88 },
-  { id: 2, name: 'Priya Sharma', role: 'GenAI Engineer', score: 87, skills: ['LangChain', 'OpenAI', 'Python', 'FastAPI'], ats: 82 },
-  { id: 3, name: 'Arjun Mehta', role: 'Data Scientist', score: 81, skills: ['Python', 'Scikit-learn', 'SQL', 'Tableau'], ats: 79 },
-  { id: 4, name: 'Sneha Patel', role: 'Backend Engineer', score: 75, skills: ['Go', 'Docker', 'Kubernetes', 'PostgreSQL'], ats: 74 },
-  { id: 5, name: 'Rohan Das', role: 'Frontend Engineer', score: 68, skills: ['React', 'TypeScript', 'Next.js', 'TailwindCSS'], ats: 71 },
-];
-
-const skillData = [
-  { skill: 'Python', count: 4 },
-  { skill: 'React', count: 3 },
-  { skill: 'Docker', count: 2 },
-  { skill: 'LangChain', count: 2 },
-  { skill: 'SQL', count: 3 },
-  { skill: 'TypeScript', count: 2 },
-];
+import { Users, Trophy, TrendingUp, Filter, Star, Loader2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import API_BASE from '../config';
 
 const RecruiterDashboard = () => {
-  const [selected, setSelected] = useState(candidates[0]);
+  const [candidates, setCandidates] = useState([]);
+  const [skillData, setSkillData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [candRes, skillRes] = await Promise.all([
+          fetch(`${API_BASE}/api/v1/recruiter/candidates`),
+          fetch(`${API_BASE}/api/v1/recruiter/skill-heatmap`)
+        ]);
+        if (candRes.ok && skillRes.ok) {
+          const candData = await candRes.json();
+          const skillData = await skillRes.json();
+          
+          // Map backend format to frontend expected format
+          const mappedCandidates = candData.candidates.map(c => ({
+            id: c.id,
+            name: c.name,
+            role: c.role || 'Candidate', // Default since backend might not have role without job matching
+            score: c.ats_score || 0, // Using ATS score as overall match since we don't have job context here
+            skills: c.skills || [],
+            ats: c.ats_score || 0
+          }));
+          
+          setCandidates(mappedCandidates);
+          setSkillData(skillData.skills);
+          if (mappedCandidates.length > 0) {
+            setSelected(mappedCandidates[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load recruiter data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filtered = candidates.filter(c =>
     c.name.toLowerCase().includes(filter.toLowerCase()) ||
     c.skills.some(s => s.toLowerCase().includes(filter.toLowerCase()))
   );
 
-  const radarData = selected.skills.map((s, i) => ({
-    subject: s,
-    score: [90, 85, 78, 70][i % 4],
-  }));
+  if (loading) {
+    return <div className="p-8 flex items-center justify-center text-white"><Loader2 className="animate-spin mr-2" /> Loading Recruiter Data...</div>;
+  }
+  
+  if (candidates.length === 0) {
+    return <div className="p-8 text-white">No candidates found. Upload a resume first!</div>;
+  }
 
   return (
     <div className="p-8">

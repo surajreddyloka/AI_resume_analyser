@@ -5,6 +5,7 @@ from app.services.parser import ResumeParser
 from app.services.ats_analyzer import ATSAnalyzer
 from app.services.gemini_service import GeminiService
 from app.schemas.resume import ResumeResponse
+from app.routes.auth import get_current_user_optional
 from datetime import datetime
 import cloudinary
 import cloudinary.uploader
@@ -20,7 +21,7 @@ cloudinary.config(
 router = APIRouter()
 
 @router.post("/upload", response_model=ResumeResponse)
-async def upload_resume(file: UploadFile = File(...), db = Depends(get_db)):
+async def upload_resume(file: UploadFile = File(...), db = Depends(get_db), current_user = Depends(get_current_user_optional)):
     if not file.filename.endswith(('.pdf', '.docx')):
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported.")
     
@@ -49,7 +50,7 @@ async def upload_resume(file: UploadFile = File(...), db = Depends(get_db)):
 
     # 5. Save to DB
     resume_doc = {
-        "user_id": "1", # Hardcoded to 1 for demo purposes if no auth
+        "user_id": current_user["_id"] if current_user else "1",
         "filename": file.filename,
         "file_url": file_url,
         "raw_text": raw_text,

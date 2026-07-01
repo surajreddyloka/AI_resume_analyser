@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Compass, Loader2, Award, BookOpen, Code2, ChevronRight } from 'lucide-react';
+import API_BASE from '../config';
 
 const CareerRoadmap = () => {
   const [skills, setSkills] = useState('');
@@ -8,45 +9,27 @@ const CareerRoadmap = () => {
   const [loading, setLoading] = useState(false);
   const [roadmap, setRoadmap] = useState(null);
 
-  const generateRoadmap = () => {
+  const generateRoadmap = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setRoadmap({
-        missing_skills: ['Docker', 'Kubernetes', 'MLOps', 'LangChain', 'Vector Databases'],
-        roadmap: [
-          {
-            step: 1,
-            title: 'Phase 1: Core ML Fundamentals',
-            description: 'Solidify your mathematical and algorithmic foundations for machine learning.',
-            skills_to_learn: ['Linear Algebra', 'Statistics', 'Scikit-learn', 'Feature Engineering'],
-          },
-          {
-            step: 2,
-            title: 'Phase 2: Deep Learning & LLMs',
-            description: 'Learn the architectures powering modern AI — Transformers, attention mechanisms, and fine-tuning.',
-            skills_to_learn: ['PyTorch', 'Transformers (HuggingFace)', 'Fine-tuning LLMs', 'LangChain'],
-          },
-          {
-            step: 3,
-            title: 'Phase 3: MLOps & Production',
-            description: 'Learn to deploy, monitor, and scale AI systems in production environments.',
-            skills_to_learn: ['Docker', 'Kubernetes', 'MLflow', 'CI/CD for ML', 'Vector Databases'],
-          },
-          {
-            step: 4,
-            title: 'Phase 4: Specialization & Portfolio',
-            description: 'Build 3–5 high-impact GenAI projects and contribute to open-source to stand out.',
-            skills_to_learn: ['RAG Pipelines', 'AI Agents', 'Full-Stack AI Apps', 'Open Source Contribution'],
-          },
-        ],
-        certifications_recommended: [
-          'Google Professional ML Engineer',
-          'AWS Certified Machine Learning – Specialty',
-          'DeepLearning.AI Specializations',
-        ],
+    try {
+      const currentSkillsArray = skills.split(',').map(s => s.trim()).filter(Boolean);
+      const res = await fetch(`${API_BASE}/api/v1/ai/career-roadmap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current_skills: currentSkillsArray, target_role: role })
       });
-    }, 2500);
+      if (res.ok) {
+        const data = await res.json();
+        setRoadmap(data);
+      } else {
+        alert("Failed to generate roadmap.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error generating roadmap.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const phaseColors = ['indigo', 'purple', 'violet', 'fuchsia'];

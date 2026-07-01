@@ -1,12 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, Square, Volume2, Award, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import API_BASE from '../config';
 
 const MockInterview = () => {
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  
+  const QUESTIONS = [
+    "Can you explain the difference between state and props in React, and when you would use context API over Redux?",
+    "Describe a challenging technical problem you solved recently and the approach you took.",
+    "How do you ensure your code is scalable and maintainable in a growing codebase?",
+    "What is your understanding of RESTful APIs, and how do they differ from GraphQL?",
+    "Explain the concept of containerization (like Docker) and its benefits in deployment."
+  ];
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const currentQuestion = QUESTIONS[currentQuestionIndex];
   
   const recognitionRef = useRef(null);
 
@@ -40,17 +51,32 @@ const MockInterview = () => {
     }
   };
 
-  const analyzeResponse = () => {
+  const analyzeResponse = async () => {
     setAnalyzing(true);
-    setTimeout(() => {
-      setAnalyzing(false);
-      setFeedback({
-        score: 8.5,
-        comments: "Strong answer. You clearly explained the architecture of React and its unidirectional data flow. However, you could improve by mentioning the Virtual DOM in more detail.",
-        strengths: ["Clear communication", "Good technical vocabulary"],
-        improvements: ["Mention Virtual DOM", "Speak slightly slower"]
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/ai/evaluate-interview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: currentQuestion, transcript })
       });
-    }, 3000);
+      if (res.ok) {
+        const data = await res.json();
+        setFeedback(data);
+      } else {
+        alert("Failed to analyze response.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error analyzing response.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const nextQuestion = () => {
+    setCurrentQuestionIndex((prev) => (prev + 1) % QUESTIONS.length);
+    setTranscript('');
+    setFeedback(null);
   };
 
   return (
@@ -65,11 +91,16 @@ const MockInterview = () => {
       </div>
 
       <div className="glass rounded-2xl p-8 mb-8 border-t-4 border-t-indigo-500">
-        <h2 className="text-sm font-bold uppercase text-indigo-400 mb-2 flex items-center gap-2">
-          <Volume2 size={16} /> Question 1 of 5
-        </h2>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-sm font-bold uppercase text-indigo-400 flex items-center gap-2">
+            <Volume2 size={16} /> Question {currentQuestionIndex + 1} of {QUESTIONS.length}
+          </h2>
+          <button onClick={nextQuestion} className="text-xs px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full hover:bg-indigo-500/30 transition-all">
+            Next Question &rarr;
+          </button>
+        </div>
         <p className="text-2xl text-white font-medium leading-relaxed">
-          "Can you explain the difference between state and props in React, and when you would use context API over Redux?"
+          "{currentQuestion}"
         </p>
       </div>
 

@@ -51,11 +51,12 @@ const ATSAnalyzer = () => {
       const resumeStr = localStorage.getItem('currentResume');
       if (resumeStr) {
         const currentResume = JSON.parse(resumeStr);
-        setResult({
+          setResult({
           score: currentResume.ats_score || 0,
           strengths: currentResume.ats_feedback?.strengths || [],
           weaknesses: currentResume.ats_feedback?.weaknesses || [],
           formatting: currentResume.ats_feedback?.formatting || [],
+          metrics: currentResume.ats_feedback?.metrics || [],
         });
       } else {
         alert("No resume found. Please upload a resume on the Dashboard first.");
@@ -63,13 +64,24 @@ const ATSAnalyzer = () => {
     }, 1000); // 1s simulation delay for UI feeling
   };
 
-  const scoreBreakdown = [
-    { label: 'Skills Match', score: 85, color: 'emerald' },
-    { label: 'Action Verbs', score: 60, color: 'yellow' },
-    { label: 'Quantifiable Metrics', score: 75, color: 'indigo' },
-    { label: 'Formatting & Sections', score: 90, color: 'sky' },
-    { label: 'Content Quality', score: 55, color: 'orange' },
-  ];
+  const calculateScoreBreakdown = () => {
+    if (!result) return [];
+    
+    // Simple heuristic to generate breakdown from the overall ATS result object
+    const calculateSectionScore = (items, maxPenalty = 20) => {
+      const penalty = Math.min((items.length * 5), maxPenalty);
+      return 100 - penalty;
+    };
+
+    return [
+      { label: 'Action Verbs', score: calculateSectionScore(result.weaknesses.filter(w => w.includes('verb')), 30), color: 'emerald' },
+      { label: 'Quantifiable Metrics', score: result.metrics.length > 0 && result.metrics[0].includes('No quantifiable') ? 40 : 100, color: 'yellow' },
+      { label: 'Formatting & Sections', score: calculateSectionScore(result.formatting, 30), color: 'indigo' },
+      { label: 'Content Quality', score: result.score > 80 ? 90 : result.score, color: 'sky' },
+    ];
+  };
+
+  const scoreBreakdown = calculateScoreBreakdown();
 
   return (
     <div className="p-8">
