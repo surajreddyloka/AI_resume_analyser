@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://ai-resume-analyser-2-qbvl.onrender.com/api/:splat"
+  to = "https://airesumeanalyser.up.railway.app/api/:splat"
   status = 200
 
 [[redirects]]
