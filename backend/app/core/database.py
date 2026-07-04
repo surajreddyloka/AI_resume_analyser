@@ -1,7 +1,8 @@
 import motor.motor_asyncio
+import certifi
 from app.core.config import settings
 
-client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGO_URI)
+client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGO_URI, tlsCAFile=certifi.where())
 # Parse database name from URI, default to 'airecruiter'
 db_name = settings.MONGO_URI.split("/")[-1].split("?")[0]
 if not db_name:
